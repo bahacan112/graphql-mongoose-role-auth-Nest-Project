@@ -1,43 +1,40 @@
 import {
   Args,
+  Context,
   Mutation,
   Parent,
   Query,
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { Logger, UseGuards } from '@nestjs/common';
-import { User } from 'src/schemas/user.schema'; // <-- Mongoose şeması
+import { Logger } from '@nestjs/common';
+import { User } from 'src/schemas/user.schema';
 import { UserService } from './user.service';
 import { UpdateUserInput } from './dto/update-user.input';
-import { GqlJwtGuard } from 'src/auth/guards/gql-jwt-guard/gql-jwt.guard';
-import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
-import { JwtUser } from 'src/auth/types/jwt-user';
-import { Roles } from 'src/auth/decorators/roles.decorator';
-import { Role } from 'src/enums/role.enum';
-import { RolesGuard } from 'src/auth/guards/roles/roles.guard';
+import { Roles, Resource } from 'nest-keycloak-connect';
 
 @Resolver(() => User)
+@Resource('user-resource') // 👈 Bu satırı mutlaka ekle
 export class UserResolver {
-  constructor(private readonly userService: UserService) {}
-
   private readonly logger = new Logger(UserResolver.name);
+
+  constructor(private readonly userService: UserService) {}
 
   @Query(() => [User], { name: 'users' })
   async findAll(): Promise<User[]> {
-    return await this.userService.findAll();
+    return this.userService.findAll();
   }
 
-  @UseGuards(GqlJwtGuard)
   @Query(() => User)
   async getUser(@Args('id', { type: () => String }) id: string): Promise<User> {
-    return this.userService.findOne(id);
+    return this.userService.findById(id);
   }
 
-  @UseGuards(GqlJwtGuard)
   @Query(() => User)
-  async me(@CurrentUser() user: JwtUser): Promise<User> {
-    return this.userService.findOne(user.userId);
+  async me(@Context('req') req: any): Promise<User> {
+    const user = req.user;
+    this.logger.debug(`Current user sub: ${user.sub}`);
+    return this.userService.findOrCreateFromToken(user);
   }
 
   @ResolveField('profile')
@@ -46,23 +43,29 @@ export class UserResolver {
     return user.profile;
   }
 
-  @Roles(Role.ADMIN)
-  @UseGuards(GqlJwtGuard, RolesGuard)
+  @Roles({ roles: ['admin'] })
   @Mutation(() => User)
   async updateUser(
-    @CurrentUser() user: JwtUser,
+    @Context('req') req: any,
     @Args('updateUserInput') updateUserInput: UpdateUserInput,
   ): Promise<User> {
-    this.logger.debug(`Updating user ${user.userId}`);
-    return this.userService.update(user.userId, updateUserInput);
+    const user = req.user;
+    this.logger.debug(`Updating user ${user.sub}`);
+    return this.userService.updateByKeycloakId(user.sub, updateUserInput);
   }
 
-  @Roles(Role.ADMIN)
-  @UseGuards(GqlJwtGuard, RolesGuard)
+  @Roles({ roles: ['admin'] })
   @Mutation(() => Boolean)
   async removeUser(
     @Args('id', { type: () => String }) id: string,
   ): Promise<boolean> {
     return this.userService.remove(id);
+  }
+
+  // ✅ Yeni Admin Sorgusu
+  @Query(() => String)
+  async adminTest(): Promise<string> {
+    this.logger.debug('Admin tarafından erişildi.');
+    return 'Sadece adminlerin görebileceği gizli veri';
   }
 }

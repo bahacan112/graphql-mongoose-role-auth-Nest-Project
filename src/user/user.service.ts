@@ -2,9 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from 'src/schemas/user.schema';
 import { Model } from 'mongoose';
-import { CreateUserInput } from './dto/create-user.input';
 import { UpdateUserInput } from './dto/update-user.input';
-import { hash } from 'argon2';
 import { LogService } from 'src/common/logger/logger.service';
 
 @Injectable()
@@ -24,7 +22,7 @@ export class UserService {
     return users;
   }
 
-  async findOne(id: string): Promise<User> {
+  async findById(id: string): Promise<User> {
     const user = await this.userModel.findById(id).populate(['profile']);
     if (!user) {
       this.logger.warn(
@@ -33,6 +31,7 @@ export class UserService {
       );
       throw new NotFoundException('User not found');
     }
+
     this.logger.save(
       `[${new Date().toISOString()}] Fetched user ${id}`,
       'UserService',
@@ -40,37 +39,47 @@ export class UserService {
     return user;
   }
 
-  async create(createUserInput: CreateUserInput): Promise<User> {
-    const hashedPassword = await hash(createUserInput.password);
-
-    const createdUser = new this.userModel({
-      ...createUserInput,
-      password: hashedPassword,
-    });
-
-    const result = await createdUser.save();
-    this.logger.save(
-      `[${new Date().toISOString()}] Created user ${result._id}`,
-      'UserService',
-    );
-    return result;
+  async findByKeycloakId(sub: string): Promise<User | null> {
+    return this.userModel.findOne({ keycloakId: sub }).populate(['profile']);
   }
 
-  async update(id: string, updateUserInput: UpdateUserInput): Promise<User> {
+  async findOrCreateFromToken(tokenPayload: any): Promise<User> {
+    const { sub, preferred_username, email } = tokenPayload;
+
+    const existing = await this.findByKeycloakId(sub);
+    if (existing) return existing;
+
+    const newUser = await this.userModel.create({
+      keycloakId: sub,
+      username: preferred_username,
+      email,
+    });
+
+    this.logger.save(
+      `[${new Date().toISOString()}] Created user ${newUser._id}`,
+      'UserService',
+    );
+    return newUser;
+  }
+
+  async updateByKeycloakId(
+    sub: string,
+    updateUserInput: UpdateUserInput,
+  ): Promise<User> {
     const user = await this.userModel
-      .findByIdAndUpdate(id, updateUserInput, { new: true })
+      .findOneAndUpdate({ keycloakId: sub }, updateUserInput, { new: true })
       .populate(['profile']);
 
     if (!user) {
       this.logger.warn(
-        `[${new Date().toISOString()}] User ${id} not found for update`,
+        `[${new Date().toISOString()}] User ${sub} not found for update`,
         'UserService',
       );
       throw new NotFoundException('User not found');
     }
 
     this.logger.save(
-      `[${new Date().toISOString()}] Updated user ${id}`,
+      `[${new Date().toISOString()}] Updated user ${sub}`,
       'UserService',
     );
     return user;
@@ -78,17 +87,17 @@ export class UserService {
 
   async remove(id: string): Promise<boolean> {
     const result = await this.userModel.findByIdAndDelete(id);
+    const now = new Date().toISOString();
+
     if (result) {
-      this.logger.save(
-        `[${new Date().toISOString()}] Removed user ${id}`,
-        'UserService',
-      );
+      this.logger.save(`[${now}] Removed user ${id}`, 'UserService');
     } else {
       this.logger.warn(
-        `[${new Date().toISOString()}] Tried to remove non-existent user ${id}`,
+        `[${now}] Tried to remove non-existent user ${id}`,
         'UserService',
       );
     }
+
     return !!result;
   }
 }
