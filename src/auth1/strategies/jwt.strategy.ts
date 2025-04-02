@@ -1,32 +1,31 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { JwtUser } from '../types/jwt-user';
-import * as jwksRsa from 'jwks-rsa';
+import { AuthService } from '../auth.service';
+import { AuthJwtPayload } from '../types/auth-jwt-payload';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor() {
+  constructor(
+    private configService: ConfigService,
+    private authService: AuthService,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      audience: 'nextjs-client',
-      issuer: 'http://localhost:8080/realms/myrealm',
-      algorithms: ['RS256'],
-      secretOrKeyProvider: jwksRsa.passportJwtSecret({
-        cache: true,
-        rateLimit: true,
-        jwksUri:
-          'http://localhost:8080/realms/myrealm/protocol/openid-connect/certs',
-      }),
+      secretOrKey: configService.get<string>('JWT_SECRET'),
+      ignoreExpiration: false,
     });
   }
 
-  async validate(payload: any): Promise<JwtUser> {
-    return {
-      sub: payload.sub,
-      preferred_username: payload.preferred_username,
-      email: payload.email,
-      roles: payload.realm_access?.roles || [],
-    };
+  async validate(payload: AuthJwtPayload) {
+    const userId = payload.sub; // ✅ sub artık doğrudan string olacak
+    const jwtUser = await this.authService.validateJwtUser(payload.sub);
+
+    console.log({ userId, jwtUser });
+
+    return jwtUser; // bu obje req.user içine yazılır
   }
 }
+
+// req.user
