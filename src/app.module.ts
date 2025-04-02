@@ -14,6 +14,7 @@ import { ContactModule } from './contact/contact.module';
 import { ExcelUploadModule } from './excel-upload/excel-upload.module';
 import { GroupListModule } from './group-list/group-list.module';
 import { ReservationModule } from './reservation/reservation.module';
+import { GuideModule } from './guide/guide.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -31,7 +32,7 @@ import { ReservationModule } from './reservation/reservation.module';
       csrfPrevention: false, // ✅ DOĞRU YER BURA
       context: ({ req, res }) => ({ req, res }),
     }),
-
+    GuideModule,
     UserModule,
     LoggerModule,
     ResendModule,
