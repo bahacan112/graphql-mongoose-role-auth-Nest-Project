@@ -7,12 +7,15 @@ import { GroupSummary } from './dto/group-summary.output';
 import { ReservationGroupByDateDto } from './dto/reservations-by-date.output';
 import { ReservationService } from './reservation.service';
 import { ReservationByRegionDto } from './dto/reservations-by-group5-region.output';
-@Resolver()
+import { GuideTourService } from '../guide/guide-tour/guide-tour.service';
+import { ReservationSearchInput } from './dto/reservation-search.input';
+@Resolver(() => UploadedRecord)
 export class ReservationResolver {
   constructor(
     @InjectModel(UploadedRecord.name)
     private readonly uploadedRecordModel: Model<UploadedRecord>,
     private readonly reservationService: ReservationService,
+    private readonly guideTourService: GuideTourService, // ekle
   ) {}
   @Query(() => [ReservationGroupByDateDto])
   async reservationsByDate(
@@ -28,13 +31,11 @@ export class ReservationResolver {
     const grouped = new Map<string, GroupSummary>();
 
     for (const record of records) {
-      const groupKey = [
-        record.groupCodes?.grup1 || '-',
-        record.groupCodes?.grup2 || '-',
-        /*         record.groupCodes?.grup3 || '-',
-         */ /*         record.groupCodes?.grup4 || '-',
-         */ record.groupCodes?.grup5 || '-',
-      ].join(' | ');
+      const grup1 = record.groupCodes?.grup1 || '-';
+      const grup2 = record.groupCodes?.grup2 || '-';
+      const grup5 = record.groupCodes?.grup5 || '-';
+
+      const groupKey = [grup1, grup2, grup5].join(' | ');
 
       const checkIn = record.itinerary?.[0]?.checkInDate || null;
       const checkOut = record.itinerary?.at(-1)?.checkOutDate || null;
@@ -43,6 +44,9 @@ export class ReservationResolver {
       if (!grouped.has(groupKey)) {
         grouped.set(groupKey, {
           groupKey,
+          grup1,
+          grup2,
+          grup5,
           totalReservations: 1,
           totalPassengers: passengerCount,
           earliestCheckIn: checkIn,
@@ -76,5 +80,17 @@ export class ReservationResolver {
     @Args('date', { type: () => String }) date: string,
   ): Promise<ReservationByRegionDto[]> {
     return this.reservationService.findByGroup5AndRegionOnDate(date);
+  }
+
+  // src/reservation/reservation.resolver.ts
+
+  // mevcut constructor aynen kalıyor...
+
+  @Query(() => [UploadedRecord], { name: 'searchReservations' })
+  async searchReservations(
+    @Args('filter', { type: () => ReservationSearchInput })
+    filter: ReservationSearchInput,
+  ) {
+    return this.reservationService.searchReservations(filter);
   }
 }

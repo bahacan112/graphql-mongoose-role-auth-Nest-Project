@@ -14,8 +14,15 @@ export class GuideTourAssignment extends Document {
 
   @Field()
   @Prop({ required: true })
-  tourId: string;
-}
+  grup1: string;
 
+  @Field()
+  @Prop({ required: true })
+  grup2: string;
+
+  @Field()
+  @Prop({ required: true })
+  grup5: string;
+}
 export const GuideTourAssignmentSchema =
   SchemaFactory.createForClass(GuideTourAssignment);

@@ -35,6 +35,6 @@ import { GuideTourResolver } from './guide-tour/guide-tour.resolver';
     GuideTourService,
     GuideTourResolver,
   ],
-  exports: [GuideService],
+  exports: [GuideService, GuideTourService],
 })
 export class GuideModule {}

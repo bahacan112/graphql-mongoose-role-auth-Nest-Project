@@ -1,28 +1,43 @@
 import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
 import { GuideSale } from 'src/schemas/guide-sale.schema';
 import { GuideSaleService } from './guide-sale.service';
-import { CreateGuideSaleInput } from '../dto/create-guide-sale.input';
+import { CreateGuideSaleInput } from './dto/create-guide-sale.input';
+import { ID } from '@nestjs/graphql';
 
+import { UpdateGuideSaleInput } from './dto/update-guide-sale.input';
 @Resolver(() => GuideSale)
 export class GuideSaleResolver {
-  constructor(private readonly service: GuideSaleService) {}
+  constructor(private readonly guideSaleService: GuideSaleService) {}
 
-  @Query(() => [GuideSale])
-  async guideSalesByGuide(
-    @Args('guideId') guideId: string,
-  ): Promise<GuideSale[]> {
-    return this.service.findByGuideId(guideId);
+  @Mutation(() => GuideSale)
+  createGuideSale(
+    @Args('input') input: CreateGuideSaleInput,
+  ): Promise<GuideSale> {
+    return this.guideSaleService.create(input);
   }
 
   @Query(() => [GuideSale])
-  async guideSalesByTour(@Args('tourId') tourId: string): Promise<GuideSale[]> {
-    return this.service.findByTourId(tourId);
+  guideSales(): Promise<GuideSale[]> {
+    return this.guideSaleService.findAll();
+  }
+
+  @Query(() => [GuideSale])
+  guideSalesByVoucher(
+    @Args('combinedVoucher') combinedVoucher: string,
+  ): Promise<GuideSale[]> {
+    return this.guideSaleService.findByVoucher(combinedVoucher);
+  }
+  @Mutation(() => GuideSale)
+  updateGuideSale(
+    @Args('input') input: UpdateGuideSaleInput,
+  ): Promise<GuideSale> {
+    return this.guideSaleService.update(input);
   }
 
   @Mutation(() => GuideSale)
-  async recordGuideSale(
-    @Args('input') input: CreateGuideSaleInput,
+  deleteGuideSale(
+    @Args('id', { type: () => ID }) id: string,
   ): Promise<GuideSale> {
-    return this.service.recordSale(input);
+    return this.guideSaleService.delete(id);
   }
 }

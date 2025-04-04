@@ -2,15 +2,22 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { UploadedRecord } from '../schemas/uploaded-record.schema';
+import { ReservationSearchInput } from './dto/reservation-search.input';
+
 import { GroupSummary } from './dto/group-summary.output';
 import { ReservationGroupByDateDto } from './dto/reservations-by-date.output';
 import { ReservationByRegionDto } from './dto/reservations-by-group5-region.output';
+import { GuideTourService } from 'src/guide/guide-tour/guide-tour.service';
+import { GuideService } from 'src/guide/guide.service';
+import { UploadedRecord } from 'src/schemas/uploaded-record.schema';
+
 @Injectable()
 export class ReservationService {
   constructor(
     @InjectModel(UploadedRecord.name)
     private readonly uploadedRecordModel: Model<UploadedRecord>,
+    private readonly guideTourService: GuideTourService,
+    private readonly guideService: GuideService,
   ) {}
 
   async getGroupSummaries(): Promise<GroupSummary[]> {
@@ -19,13 +26,11 @@ export class ReservationService {
     const grouped = new Map<string, GroupSummary>();
 
     for (const record of records) {
-      const groupKey = [
-        record.groupCodes?.grup1 || '-',
-        record.groupCodes?.grup2 || '-',
-        /*         record.groupCodes?.grup3 || '-',
-         */ /* record.groupCodes?.grup4 || '-', */
-        record.groupCodes?.grup5 || '-',
-      ].join(' | ');
+      const grup1 = record.groupCodes?.grup1 || '-';
+      const grup2 = record.groupCodes?.grup2 || '-';
+      const grup5 = record.groupCodes?.grup5 || '-';
+
+      const groupKey = [grup1, grup2, grup5].join(' | ');
 
       const checkIn = record.itinerary?.[0]?.checkInDate || null;
       const checkOut = record.itinerary?.at(-1)?.checkOutDate || null;
@@ -34,6 +39,9 @@ export class ReservationService {
       if (!grouped.has(groupKey)) {
         grouped.set(groupKey, {
           groupKey,
+          grup1,
+          grup2,
+          grup5,
           totalReservations: 1,
           totalPassengers: passengerCount,
           earliestCheckIn: checkIn,
@@ -81,11 +89,29 @@ export class ReservationService {
       const checkOutDate = new Date(checkOut);
 
       if (target >= checkInDate && target <= checkOutDate) {
-        const groupKey = [
-          record.groupCodes?.grup1 || '-',
-          record.groupCodes?.grup2 || '-',
-          record.groupCodes?.grup5 || '-',
-        ].join(' | ');
+        const grup1 = record.groupCodes?.grup1 || '-';
+        const grup2 = record.groupCodes?.grup2 || '-';
+        const grup5 = record.groupCodes?.grup5 || '-';
+
+        const groupKey = [grup1, grup2, grup5].join(' | ');
+        const guideAssignment = await this.guideTourService.findByGroup(
+          grup1,
+          grup2,
+          grup5,
+        );
+        console.log('GUİDE ASSİGNMENT', guideAssignment);
+        let assignedGuideName: string | 'Tanımlanmadı';
+        let assignedGuideTelefon: string | 'Tanımlanmadı';
+        if (guideAssignment?.guideId) {
+          console.log('Guide İD bulundu sorgulanıyor');
+          const guide = await this.guideService.findOne(
+            guideAssignment.guideId,
+          );
+          console.log('Guide', guide);
+          assignedGuideName = guide?.adSoyad;
+          assignedGuideTelefon = guide?.telefon;
+        }
+        console.log(assignedGuideName);
 
         let transferState = 'N/A';
         let matched = false;
@@ -172,16 +198,21 @@ export class ReservationService {
         if (!resultMap.has(groupKey)) {
           resultMap.set(groupKey, {
             groupKey,
+            grup1,
+            grup2,
+            grup5,
+            assignedGuideName,
+            assignedGuideTelefon,
             checkInDate: checkIn,
             checkOutDate: checkOut,
-            voucherList: [record.voucher],
+            voucherList: [record.combinedVoucher],
             totalPassengers: record.passengers?.length || 0,
             transferState,
             itinerary: record.itinerary, // 💥 Bunu ekledik
           });
         } else {
           const existing = resultMap.get(groupKey)!;
-          existing.voucherList.push(record.voucher);
+          existing.voucherList.push(record.combinedVoucher);
           existing.totalPassengers += record.passengers?.length || 0;
           // transferState overwrite edilmiyor
         }
@@ -236,5 +267,66 @@ export class ReservationService {
     }
 
     return Array.from(resultMap.values());
+  }
+  async findReservationByVoucher(combinedVoucher: string): Promise<any> {
+    return this.uploadedRecordModel.findOne({ combinedVoucher }).lean();
+  }
+
+  async searchReservations(
+    filter: ReservationSearchInput,
+  ): Promise<UploadedRecord[]> {
+    const query: any = {};
+
+    if (filter.combinedVoucher)
+      query.combinedVoucher = { $regex: filter.combinedVoucher, $options: 'i' };
+
+    if (filter.operatorCode)
+      query.operatorCode = { $regex: filter.operatorCode, $options: 'i' };
+
+    if (filter.voucher)
+      query.voucher = { $regex: filter.voucher, $options: 'i' };
+
+    if (filter.hotelName)
+      query['itinerary.hotelName'] = {
+        $regex: filter.hotelName,
+        $options: 'i',
+      };
+
+    if (filter.region) query['itinerary.region'] = filter.region;
+
+    if (filter.passengerName)
+      query['passengers.fullName'] = {
+        $regex: filter.passengerName,
+        $options: 'i',
+      };
+
+    if (filter.checkInDateFrom || filter.checkInDateTo) {
+      query['itinerary.checkInDate'] = {};
+      if (filter.checkInDateFrom)
+        query['itinerary.checkInDate'].$gte = filter.checkInDateFrom;
+      if (filter.checkInDateTo)
+        query['itinerary.checkInDate'].$lte = filter.checkInDateTo;
+    }
+
+    if (filter.checkOutDateFrom || filter.checkOutDateTo) {
+      query['itinerary.checkOutDate'] = {};
+      if (filter.checkOutDateFrom)
+        query['itinerary.checkOutDate'].$gte = filter.checkOutDateFrom;
+      if (filter.checkOutDateTo)
+        query['itinerary.checkOutDate'].$lte = filter.checkOutDateTo;
+    }
+
+    // rehber atanmışsa, sadece o rehbere ait gruplar
+    if (filter.guideId) {
+      const assignments = await this.guideTourService.findToursByGuide(
+        filter.guideId,
+      );
+      const groupKeys = assignments.map(
+        (a) => `${a.grup1 || ''}|${a.grup2 || ''}|${a.grup5 || ''}`,
+      );
+      query['groupCodes.groupKey'] = { $in: groupKeys };
+    }
+
+    return this.uploadedRecordModel.find(query).exec();
   }
 }

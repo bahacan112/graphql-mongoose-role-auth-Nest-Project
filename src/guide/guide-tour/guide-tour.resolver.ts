@@ -20,4 +20,17 @@ export class GuideTourResolver {
   ): Promise<GuideTourAssignment> {
     return this.service.assign(input);
   }
+
+  @Mutation(() => GuideTourAssignment)
+  async updateGuideTour(
+    @Args('id') id: string,
+    @Args('input') input: CreateGuideTourInput,
+  ): Promise<GuideTourAssignment> {
+    return this.service.update(id, input);
+  }
+
+  @Mutation(() => Boolean)
+  async deleteGuideTour(@Args('id') id: string): Promise<boolean> {
+    return this.service.remove(id);
+  }
 }

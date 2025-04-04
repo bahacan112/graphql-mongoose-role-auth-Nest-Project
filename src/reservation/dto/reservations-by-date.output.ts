@@ -5,6 +5,12 @@ import { ItinerarySegmentDto } from './itinerary-segment.dto';
 export class ReservationGroupByDateDto {
   @Field()
   groupKey: string;
+  @Field()
+  grup1: string;
+  @Field()
+  grup2: string;
+  @Field()
+  grup5: string;
 
   @Field({ nullable: true })
   checkInDate?: string;
@@ -23,4 +29,9 @@ export class ReservationGroupByDateDto {
 
   @Field(() => [ItinerarySegmentDto], { nullable: true })
   itinerary?: ItinerarySegmentDto[];
+
+  @Field({ nullable: true })
+  assignedGuideName?: string;
+  @Field({ nullable: true })
+  assignedGuideTelefon?: string;
 }

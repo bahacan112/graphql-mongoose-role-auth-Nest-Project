@@ -28,4 +28,12 @@ export class PackageResolver {
   async deletePackage(@Args('id') id: string): Promise<boolean> {
     return this.service.remove(id);
   }
+
+  @Mutation(() => Package)
+  async updatePackage(
+    @Args('id') id: string,
+    @Args('input') input: CreatePackageInput,
+  ): Promise<Package> {
+    return this.service.update(id, input);
+  }
 }

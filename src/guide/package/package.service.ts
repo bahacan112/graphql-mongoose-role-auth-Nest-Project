@@ -24,4 +24,8 @@ export class PackageService {
     const result = await this.model.deleteOne({ _id: id }).exec();
     return result.deletedCount === 1;
   }
+
+  async update(id: string, input: CreatePackageInput): Promise<Package | null> {
+    return this.model.findByIdAndUpdate(id, input, { new: true }).exec();
+  }
 }

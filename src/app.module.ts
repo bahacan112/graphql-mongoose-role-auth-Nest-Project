@@ -15,6 +15,7 @@ import { ExcelUploadModule } from './excel-upload/excel-upload.module';
 import { GroupListModule } from './group-list/group-list.module';
 import { ReservationModule } from './reservation/reservation.module';
 import { GuideModule } from './guide/guide.module';
+import { SharedModule } from './shared/shared-data.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -40,6 +41,7 @@ import { GuideModule } from './guide/guide.module';
     GroupListModule,
     AuthModule,
     ExcelUploadModule,
+    SharedModule,
     ReservationModule,
   ],
   controllers: [AppController],

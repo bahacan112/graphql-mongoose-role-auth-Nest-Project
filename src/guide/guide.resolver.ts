@@ -1,4 +1,4 @@
-import { Resolver, Query, Mutation, Args, Context } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
 import { GuideService } from './guide.service';
 import { Guide } from 'src/schemas/guide.schema';
 import { CreateGuideInput } from './dto/create-guide.input';
@@ -18,17 +18,13 @@ export class GuideResolver {
   }
 
   @Query(() => Guide, { nullable: true })
-  async myGuide(@Context() context): Promise<Guide | null> {
-    const userId = context.req.user.userId;
-    return this.guideService.findByUserId(userId);
+  async myGuide(@Args('telefon') telefon: string): Promise<Guide | null> {
+    return this.guideService.findByUserId(telefon);
   }
 
   @Mutation(() => Guide)
-  async createGuide(
-    @Args('input') input: CreateGuideInput,
-    @Context() context,
-  ): Promise<Guide> {
-    const userId = context.req.user.userId;
+  async createGuide(@Args('input') input: CreateGuideInput): Promise<Guide> {
+    const userId = input.telefon; // artık cep numarası
     return this.guideService.create({ ...input, userId });
   }
 }

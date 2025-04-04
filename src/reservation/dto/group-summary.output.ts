@@ -7,6 +7,15 @@ export class GroupSummary {
   groupKey: string;
 
   @Field()
+  grup1: string;
+
+  @Field()
+  grup2: string;
+
+  @Field()
+  grup5: string;
+
+  @Field()
   totalReservations: number;
 
   @Field()
