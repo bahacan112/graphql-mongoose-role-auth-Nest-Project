@@ -22,9 +22,9 @@ export class GuideSaleService {
   }
   async update(input: UpdateGuideSaleInput): Promise<GuideSale> {
     const { id, ...updateData } = input;
-    console.log(id, 'id');
+    /*     console.log(id, 'id');
     console.log(updateData, 'updateData');
-    return this.model.findByIdAndUpdate(id, updateData, { new: true }).exec();
+ */ return this.model.findByIdAndUpdate(id, updateData, { new: true }).exec();
   }
 
   async delete(id: string): Promise<GuideSale> {

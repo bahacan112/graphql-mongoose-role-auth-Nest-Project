@@ -169,9 +169,9 @@ export class ExcelUploadService {
 
     const result = await this.uploadedModel.bulkWrite(bulkOps);
 
-    console.log('📦 Excel kayıt işlemi tamamlandı:');
+    /*     console.log('📦 Excel kayıt işlemi tamamlandı:');
     console.log(`✅ Güncellenen: ${result.modifiedCount}`);
-    console.log(`➕ Eklenen: ${result.upsertedCount}`);
+ */ console.log(`➕ Eklenen: ${result.upsertedCount}`);
 
     return true;
   }

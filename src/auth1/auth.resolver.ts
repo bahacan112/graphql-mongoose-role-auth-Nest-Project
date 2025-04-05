@@ -11,8 +11,8 @@ export class AuthResolver {
 
   @Mutation(() => User)
   async signUp(@Args('input') input: CreateUserInput) {
-    console.log('service istek geldi');
-
+    /*     console.log('service istek geldi');
+     */
     return this.authService.registerUser(input);
   }
 

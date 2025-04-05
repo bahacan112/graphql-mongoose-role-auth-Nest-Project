@@ -27,4 +27,16 @@ export class GuideResolver {
     const userId = input.telefon; // artık cep numarası
     return this.guideService.create({ ...input, userId });
   }
+
+  @Mutation(() => Boolean)
+  async deleteGuide(@Args('id') id: string): Promise<boolean> {
+    return this.guideService.delete(id);
+  }
+  @Mutation(() => Guide)
+  async updateGuide(
+    @Args('id') id: string,
+    @Args('input') input: CreateGuideInput,
+  ): Promise<Guide> {
+    return this.guideService.update(id, input);
+  }
 }

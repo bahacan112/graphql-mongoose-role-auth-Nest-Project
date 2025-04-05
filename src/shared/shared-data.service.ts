@@ -119,8 +119,8 @@ export class SharedDataService {
   }
   async getFilteredReservations(filter: ReservationFilterInput) {
     const query: any = {};
-    console.log('sorgu çalıştı');
-    if (filter.grup1)
+    /*     console.log('sorgu çalıştı');
+     */ if (filter.grup1)
       query['groupCodes.grup1'] = { $regex: filter.grup1, $options: 'i' };
     if (filter.grup2)
       query['groupCodes.grup2'] = { $regex: filter.grup2, $options: 'i' };
@@ -149,7 +149,7 @@ export class SharedDataService {
       };
 
     if (filter.checkInDate && filter.checkInDateTo) {
-      query['itinerary.checkInDate'] = {
+      query['itinerary.0.checkInDate'] = {
         $gte: filter.checkInDate,
         $lte: filter.checkInDateTo,
       };

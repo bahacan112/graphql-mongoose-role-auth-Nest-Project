@@ -21,4 +21,11 @@ export class GuideService {
   async findByUserId(userId: string): Promise<Guide | null> {
     return this.guideModel.findOne({ userId });
   }
+  async delete(id: string): Promise<boolean> {
+    const result = await this.guideModel.findByIdAndDelete(id).exec();
+    return !!result;
+  }
+  async update(id: string, input: Partial<Guide>): Promise<Guide> {
+    return this.guideModel.findByIdAndUpdate(id, input, { new: true }).exec();
+  }
 }

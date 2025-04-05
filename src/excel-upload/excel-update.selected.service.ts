@@ -48,7 +48,7 @@ export class ExcelUpdateSelectedService {
 
         if (fieldPath.startsWith('passengers.')) {
           const passengerField = fieldPath.split('.').slice(1).join('.'); // 🛠 doğru yol
-          const updateResult = await this.uploadedModel.updateOne(
+          /*       const updateResult = await this.uploadedModel.updateOne(
             {
               combinedVoucher,
               'passengers.fullName': fullName,
@@ -61,12 +61,13 @@ export class ExcelUpdateSelectedService {
             {
               arrayFilters: [{ 'elem.fullName': fullName }],
             },
-          );
-          console.log(
+          ); */
+          /*           console.log(
             `🧳 Passenger güncelleme | passengers.$[elem].${passengerField} =`,
             value,
           );
           console.log('📦 Passenger update result:', updateResult);
+ */
         } else if (fieldPath.startsWith('itinerary.')) {
           const updateKey = `itinerary.0.${fieldPath.split('.').slice(1).join('.')}`;
           const updateResult = await this.uploadedModel.updateOne(

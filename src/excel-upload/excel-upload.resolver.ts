@@ -12,7 +12,6 @@ export class ExcelUploadResolver {
     @Args({ name: 'file', type: () => GraphQLUpload }) file: FileUpload,
   ): Promise<boolean> {
     const buffer = await this.readStreamToBuffer(file.createReadStream());
-    console.log('istek geldi');
     return this.excelUploadService.processExcel(buffer);
   }
 

@@ -99,20 +99,20 @@ export class ReservationService {
           grup2,
           grup5,
         );
-        console.log('GUİDE ASSİGNMENT', guideAssignment);
-        let assignedGuideName: string | 'Tanımlanmadı';
+        /*         console.log('GUİDE ASSİGNMENT', guideAssignment);
+         */ let assignedGuideName: string | 'Tanımlanmadı';
         let assignedGuideTelefon: string | 'Tanımlanmadı';
         if (guideAssignment?.guideId) {
-          console.log('Guide İD bulundu sorgulanıyor');
-          const guide = await this.guideService.findOne(
+          /*           console.log('Guide İD bulundu sorgulanıyor');
+           */ const guide = await this.guideService.findOne(
             guideAssignment.guideId,
           );
-          console.log('Guide', guide);
-          assignedGuideName = guide?.adSoyad;
+          /*           console.log('Guide', guide);
+           */ assignedGuideName = guide?.adSoyad;
           assignedGuideTelefon = guide?.telefon;
         }
-        console.log(assignedGuideName);
-
+        /*         console.log(assignedGuideName);
+         */
         let transferState = 'N/A';
         let matched = false;
 
@@ -257,14 +257,14 @@ export class ReservationService {
       const group5 = record.groupCodes?.grup5;
       const itinerary = record.itinerary;
       const region = itinerary?.[0]?.region;
-      console.log(
+      /*       console.log(
         `Group 5 in kodu: ${group5}, İtinerary deki region: ${itinerary}, ve son olarak region: ${region} dur`,
       );
-      if (!group5 || !region || !itinerary?.length) continue;
-      console.log('kod devam ediyor');
-      const checkIn = new Date(itinerary[0].checkInDate);
+ */ if (!group5 || !region || !itinerary?.length) continue;
+      /*       console.log('kod devam ediyor');
+       */ const checkIn = new Date(itinerary[0].checkInDate);
       const checkOut = new Date(itinerary[itinerary.length - 1].checkOutDate);
-      console.log(
+      /*       console.log(
         'checking:',
         checkIn,
         checkOut,
@@ -273,7 +273,7 @@ export class ReservationService {
         region,
         'dir',
       );
-      if (target >= checkIn && target <= checkOut) {
+ */ if (target >= checkIn && target <= checkOut) {
         const key = `${group5} | ${region}`;
         if (!resultMap.has(key)) {
           resultMap.set(key, {
