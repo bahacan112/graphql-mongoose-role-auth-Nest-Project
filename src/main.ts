@@ -7,7 +7,7 @@ import { graphqlUploadExpress } from 'graphql-upload-ts';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
-    origin: 'https://frontend-operation.vercel.app',
+    origin: ['https://frontend-operation.vercel.app', 'http://localhost:3000'],
     credentials: true,
   });
   // ✅ Upload middleware ÖNCE

@@ -208,13 +208,37 @@ export class ReservationService {
             voucherList: [record.combinedVoucher],
             totalPassengers: record.passengers?.length || 0,
             transferState,
-            itinerary: record.itinerary, // 💥 Bunu ekledik
+            itinerary: record.itinerary,
+
+            // 💡 Operatör bazlı passenger sayısı
+            operatorSummary: [
+              {
+                operatorCode: record.operatorCode,
+                vouchers: [record.combinedVoucher],
+                passengerCount: record.passengers?.length || 0,
+              },
+            ],
           });
         } else {
           const existing = resultMap.get(groupKey)!;
           existing.voucherList.push(record.combinedVoucher);
           existing.totalPassengers += record.passengers?.length || 0;
-          // transferState overwrite edilmiyor
+
+          // 💡 Operatör özetine göre passenger ekle
+          const operator = existing.operatorSummary?.find(
+            (op) => op.operatorCode === record.operatorCode,
+          );
+
+          if (operator) {
+            operator.vouchers.push(record.combinedVoucher);
+            operator.passengerCount += record.passengers?.length || 0;
+          } else {
+            existing.operatorSummary?.push({
+              operatorCode: record.operatorCode,
+              vouchers: [record.combinedVoucher],
+              passengerCount: record.passengers?.length || 0,
+            });
+          }
         }
       }
     }

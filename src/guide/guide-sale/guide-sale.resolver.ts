@@ -29,9 +29,10 @@ export class GuideSaleResolver {
   }
   @Mutation(() => GuideSale)
   updateGuideSale(
+    @Args('id', { type: () => ID }) id: string,
     @Args('input') input: UpdateGuideSaleInput,
   ): Promise<GuideSale> {
-    return this.guideSaleService.update(input);
+    return this.guideSaleService.update({ id, ...input });
   }
 
   @Mutation(() => GuideSale)
@@ -39,5 +40,19 @@ export class GuideSaleResolver {
     @Args('id', { type: () => ID }) id: string,
   ): Promise<GuideSale> {
     return this.guideSaleService.delete(id);
+  }
+
+  @Mutation(() => Boolean)
+  async deleteGuideSaleById(@Args('id') id: string): Promise<boolean> {
+    const result = await this.guideSaleService.delete(id); // mevcut delete fonksiyonunu kullanıyoruz
+    return !!result;
+  }
+
+  @Mutation(() => GuideSale)
+  async updateGuideSaleById(
+    @Args('id') id: string,
+    @Args('input') input: UpdateGuideSaleInput,
+  ): Promise<GuideSale> {
+    return this.guideSaleService.update({ id, ...input }); // mevcut update fonksiyonunu kullanıyoruz
   }
 }

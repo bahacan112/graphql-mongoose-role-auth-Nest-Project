@@ -1,5 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { ItinerarySegmentDto } from './itinerary-segment.dto';
+import { OperatorSummary } from './operator-summary.output';
+import { GuideSale } from 'src/schemas/guide-sale.schema';
 
 @ObjectType()
 export class ReservationGroupByDateDto {
@@ -34,4 +36,8 @@ export class ReservationGroupByDateDto {
   assignedGuideName?: string;
   @Field({ nullable: true })
   assignedGuideTelefon?: string;
+  @Field(() => [OperatorSummary], { nullable: true })
+  operatorSummary?: OperatorSummary[];
+  @Field(() => [GuideSale], { nullable: true })
+  guideSale?: GuideSale[];
 }

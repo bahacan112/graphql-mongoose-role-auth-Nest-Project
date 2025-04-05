@@ -4,7 +4,7 @@ import { InputType, Field, ID, Int } from '@nestjs/graphql';
 @InputType()
 export class UpdateGuideSaleInput {
   @Field(() => ID)
-  id: string;
+  id?: string;
 
   @Field({ nullable: true }) saleDate?: Date;
   @Field({ nullable: true }) packageName?: string;

@@ -1,5 +1,6 @@
 // src/reservation/dto/group-summary.output.ts
 import { ObjectType, Field } from '@nestjs/graphql';
+import { OperatorSummary } from './operator-summary.output';
 
 @ObjectType()
 export class GroupSummary {
@@ -26,4 +27,7 @@ export class GroupSummary {
 
   @Field({ nullable: true })
   latestCheckOut?: string;
+
+  @Field(() => [OperatorSummary], { nullable: true })
+  operatorSummary?: OperatorSummary[];
 }

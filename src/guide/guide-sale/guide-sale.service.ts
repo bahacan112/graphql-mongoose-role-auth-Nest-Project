@@ -22,10 +22,24 @@ export class GuideSaleService {
   }
   async update(input: UpdateGuideSaleInput): Promise<GuideSale> {
     const { id, ...updateData } = input;
+    console.log(id, 'id');
+    console.log(updateData, 'updateData');
     return this.model.findByIdAndUpdate(id, updateData, { new: true }).exec();
   }
 
   async delete(id: string): Promise<GuideSale> {
     return this.model.findByIdAndDelete(id).exec();
+  }
+  async deleteByVoucher(combinedVoucher: string): Promise<number> {
+    const result = await this.model.deleteMany({ combinedVoucher }).exec();
+    return result.deletedCount || 0;
+  }
+
+  async updateByVoucher(
+    combinedVoucher: string,
+    update: Partial<GuideSale>,
+  ): Promise<GuideSale[]> {
+    await this.model.updateMany({ combinedVoucher }, update).exec();
+    return this.model.find({ combinedVoucher }).exec();
   }
 }
